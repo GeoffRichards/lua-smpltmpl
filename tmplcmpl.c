@@ -3,7 +3,7 @@
 
 #define START_HTML \
     if (!inhtml) { \
-        fprintf(fout, "    res:write(\""); \
+        fprintf(fout, "    __out:write(\""); \
         inhtml = true; \
     }
 #define END_HTML \
@@ -30,8 +30,12 @@ main (int argc, const char **argv) {
     }
 
     fprintf(fout, "-- Templated code compiled from %s\n"
-            "local M = {}\n"
-            "function M.generate (res, v)\n", argv[1]);
+            "local __M = {}\n\n"
+            "local __env, __envmeta = {}, {}\n"
+            "for k, v in pairs(getfenv()) do __env[k] = v end\n"
+            "setmetatable(__env, __envmeta)\n\n"
+            "function __M.generate (__out, __v)\n"
+            "    __envmeta.__index = __v\n", argv[1]);
 
     int c;
     int depth = 0;
@@ -54,7 +58,7 @@ main (int argc, const char **argv) {
                 else if (c != EOF)
                     ungetc(c, fin);
                 if (isexpr)
-                    fputs("    res:write((", fout);
+                    fputs("    __out:write((", fout);
             }
         }
         else if (c == '}') {
@@ -104,8 +108,9 @@ main (int argc, const char **argv) {
         return 1;
     }
 
-    fprintf(fout, "end\n"
-            "return M\n");
+    fprintf(fout, "end\n\n"
+            "setfenv(__M.generate, __env)\n\n"
+            "return __M\n");
 
     fclose(fin);
     fclose(fout);
