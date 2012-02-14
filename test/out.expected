@@ -1,0 +1,8 @@
+[Hello &amp;&lt;world&gt;&quot;'] [Hello &<world>"']
+
+Escaped: $ { } <x>&amp;</x>
+
+[
+* foo.
+* bar.
+* baz.]

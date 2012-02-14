@@ -1,0 +1,7 @@
+[{= v.hello }] [{=! v.hello }]
+
+Escaped: $$ ${ $} <x>&amp;</x>
+
+[{ for _, item in ipairs(v.list) do }
+* {= item }.{
+   end }]
