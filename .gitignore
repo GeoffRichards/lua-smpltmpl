@@ -1,2 +1,5 @@
+*.d
+*.lo
 *.o
-tmplcmpl
+.libs
+liblua-qtemplate_priv.la

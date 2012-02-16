@@ -1,18 +1,22 @@
-do
-    local gsub = string.gsub
-    local HTML_ESC = {
-        ["<"] = '&lt;', [">"] = '&gt;', ["&"] = '&amp;', ["\""] = '&quot;',
-    }
-    string.html = function (self)
-        return (gsub(self, '[<>&"]', function (c) return HTML_ESC[c] end))
-    end
-end
+-- This will load the new copy of the library on Unix systems where it's built
+-- with libtool.
+package.cpath = ".libs/liblua-?.so;" .. package.cpath
+local QTmpl = require 'qtemplate'
 
-local tmpl = loadfile("test/foo.qtmpl.lua")()
-local out = io.open("test/out.got", "wb")
+local tmpl, code = QTmpl.compile('test/foo.qtmpl')
+
+-- Write out compiled template for debugging.
+do
+    local fh = assert(io.open("test/foo.qtmpl.lua", "wb"))
+    fh:write(code)
+    fh:close()
+end
 
 local info = {
         hello = "Hello &<world>\"'",
         list = { "foo", "bar", "baz" },
 }
-tmpl.generate(out, info)
+
+local out = assert(io.open("test/out.got", "wb"))
+tmpl:generate(out, info)
+out:close()

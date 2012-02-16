@@ -1,3 +1,4 @@
+#include "qtemplate.h"
 #include <stdio.h>
 #include <stdbool.h>
 
@@ -12,18 +13,25 @@
         inhtml = false; \
     }
 
-int
-main (int argc, const char **argv) {
-    if (argc != 3) {
-        fprintf(stderr, "usage: tmplcmpl input.tmpl output.lua\n");
-        return 1;
-    }
-    FILE *fin = fopen(argv[1], "rb");
+static int
+compile_tmpl (lua_State *L) {
+    const char *filename_in, *filename_out;
+    FILE *fin, *fout;
+    int c;
+    int depth = 0;
+    bool isexpr = false, inhtml = false, noescape = false;
+
+    if (lua_gettop(L) != 2)
+        return luaL_error(L, "wrong number of args to qtemplate.compile()");
+    filename_in = lua_tostring(L, 1);
+    filename_out = lua_tostring(L, 2);
+
+    fin = fopen(filename_in, "rb");
     if (!fin) {
         fprintf(stderr, "can't open input file\n");
         return 1;
     }
-    FILE *fout = fopen(argv[2], "wb");
+    fout = fopen(filename_out, "wb");
     if (!fout) {
         fprintf(stderr, "can't open output file\n");
         return 1;
@@ -34,12 +42,9 @@ main (int argc, const char **argv) {
             "local __env, __envmeta = {}, {}\n"
             "for k, v in pairs(getfenv()) do __env[k] = v end\n"
             "setmetatable(__env, __envmeta)\n\n"
-            "function __M.generate (__out, __v)\n"
-            "    __envmeta.__index = __v\n", argv[1]);
+            "function __M:generate (__out, __v)\n"
+            "    __envmeta.__index = __v\n", filename_in);
 
-    int c;
-    int depth = 0;
-    bool isexpr = false, inhtml = false, noescape = false;
     while ((c = fgetc(fin)) != EOF) {
         if (c == '{') {
             if (depth++ == 0) {
@@ -121,4 +126,29 @@ main (int argc, const char **argv) {
     fclose(fin);
     fclose(fout);
     return 0;
+}
+
+int
+luaopen_qtemplate_priv (lua_State *L) {
+#ifdef VALGRIND_LUA_MODULE_HACK
+    /* Hack to allow Valgrind to access debugging info for the module. */
+    luaL_getmetatable(L, "_LOADLIB");
+    lua_pushnil(L);
+    lua_setfield(L, -2, "__gc");
+    lua_pop(L, 1);
+#endif
+
+    /* Create the table to return from 'require' */
+    lua_createtable(L, 0, 3);
+    lua_pushliteral(L, "_NAME");
+    lua_pushliteral(L, "qtemplate_priv");
+    lua_rawset(L, -3);
+    lua_pushliteral(L, "_VERSION");
+    lua_pushliteral(L, VERSION);
+    lua_rawset(L, -3);
+    lua_pushliteral(L, "compile");
+    lua_pushcfunction(L, compile_tmpl);
+    lua_rawset(L, -3);
+
+    return 1;
 }
