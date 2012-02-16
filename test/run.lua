@@ -3,7 +3,8 @@
 package.cpath = ".libs/liblua-?.so;" .. package.cpath
 local QTmpl = require 'qtemplate'
 
-local tmpl, code = QTmpl.compile('test/foo.qtmpl')
+local TmplProc = QTmpl.new({ dirs = { 'test' } })
+local tmpl, code = TmplProc:compile_template('foo')
 
 -- Write out compiled template for debugging.
 do

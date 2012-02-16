@@ -67,6 +67,17 @@ qbuf_putc (QBuffer *buf, char c) {
     buf->data[buf->size++] = c;
 }
 
+#include <unistd.h>
+#include <sys/stat.h>
+#include <errno.h>
+static int
+file_exists (lua_State *L) {
+    const char *filename = luaL_checkstring(L, 1);
+    struct stat buf;
+    lua_pushboolean(L, !stat(filename, &buf) || errno == ENOENT);
+    return 1;
+}
+
 #define QBUF_PUTS(buf, data) \
     qbuf_puts_len((buf), (data), strlen((data)))
 
@@ -83,27 +94,20 @@ qbuf_putc (QBuffer *buf, char c) {
 
 static int
 compile_tmpl (lua_State *L) {
-    const char *filename_in;
-    FILE *fin;
+    const char *data;
+    size_t len, pos;
     int c;
     int depth = 0;
-    int isexpr = 0, inhtml = 0, noescape = 0;
+    int isexpr = 0, inhtml = 0, noescape = 0;   /* these are bools */
     QBuffer *buf;
 
     if (lua_gettop(L) != 1)
         return luaL_error(L, "wrong number of args to qtemplate.compile()");
-    filename_in = lua_tostring(L, 1);
-
-    fin = fopen(filename_in, "rb");
-    if (!fin) {
-        fprintf(stderr, "can't open input file\n");
-        return 1;
-    }
+    data = luaL_checklstring(L, 1, &len);
+    pos = 0;
 
     buf = qbuf_new();
-    QBUF_PUTS(buf, "-- Templated code compiled from ");
-    QBUF_PUTS(buf, filename_in);
-    QBUF_PUTS(buf, "\n"
+    QBUF_PUTS(buf, "-- Template code compiled by Lua qtemplate module.\n"
               "local __M = {}\n\n"
               "local __env, __envmeta = {}, {}\n"
               "for k, v in pairs(getfenv()) do __env[k] = v end\n"
@@ -111,19 +115,22 @@ compile_tmpl (lua_State *L) {
               "function __M:generate (__out, __v)\n"
               "    __envmeta.__index = __v\n");
 
-    while ((c = fgetc(fin)) != EOF) {
+    while (pos < len) {
+        c = data[pos++];
         if (c == '{') {
             if (depth++ == 0) {
                 END_HTML
-                c = fgetc(fin);
                 isexpr = 1;
                 noescape = 0;
-                if (c == '{')
-                    isexpr = 0;
-                else if (c == '!')
-                    noescape = 1;
-                else if (c != EOF)
-                    ungetc(c, fin);
+                if (pos < len) {
+                    c = data[pos++];
+                    if (c == '{')
+                        isexpr = 0;
+                    else if (c == '!')
+                        noescape = 1;
+                    else
+                        pos--;
+                }
                 if (isexpr)
                     QBUF_PUTS(buf, "    __out:write(tostring(");
             }
@@ -144,8 +151,7 @@ compile_tmpl (lua_State *L) {
                         QBUF_PUTS(buf, "):html())\n");
                 }
                 else {
-                    c = fgetc(fin);
-                    if (c != '}') {
+                    if (pos >= len || data[pos++] != '}'){
                         fprintf(stderr, "code chunk should end with '}}'\n");
                         return 1;
                     }
@@ -156,12 +162,13 @@ compile_tmpl (lua_State *L) {
                 qbuf_putc(buf, '}');
         }
         else if (c == '$') {
-            c = fgetc(fin);
-            START_HTML
-            if (c == EOF)
-                qbuf_putc(buf, '$');
-            else
+            if (pos < len) {
+                c = data[pos++];
+                START_HTML
                 qbuf_putc(buf, c);
+            }
+            else
+                qbuf_putc(buf, '$');
         }
         else if (depth == 0) {
             START_HTML
@@ -190,8 +197,6 @@ compile_tmpl (lua_State *L) {
               "return __M\n");
     qbuf_pushlua(buf, L);
     qbuf_free(buf);
-
-    fclose(fin);
     return 1;
 }
 
@@ -215,6 +220,9 @@ luaopen_qtemplate_priv (lua_State *L) {
     lua_rawset(L, -3);
     lua_pushliteral(L, "compile");
     lua_pushcfunction(L, compile_tmpl);
+    lua_rawset(L, -3);
+    lua_pushliteral(L, "file_exists");
+    lua_pushcfunction(L, file_exists);
     lua_rawset(L, -3);
 
     return 1;
