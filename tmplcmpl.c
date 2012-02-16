@@ -58,8 +58,10 @@ main (int argc, const char **argv) {
                 else if (c != EOF)
                     ungetc(c, fin);
                 if (isexpr)
-                    fputs("    __out:write((", fout);
+                    fputs("    __out:write(tostring(", fout);
             }
+            else
+                fputc('{', fout);
         }
         else if (c == '}') {
             if (depth == 0) {
@@ -77,6 +79,8 @@ main (int argc, const char **argv) {
                 else
                     fputc('\n', fout);
             }
+            else
+                fputc('}', fout);
         }
         else if (c == '$') {
             c = fgetc(fin);

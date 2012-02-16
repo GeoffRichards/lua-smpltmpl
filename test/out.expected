@@ -2,6 +2,10 @@
 
 Escaped: $ { } <x>&amp;</x>
 
+tostring: 23 42
+
+Nested braces: [x 2 foo]
+
 [
 * foo.
 * bar.
