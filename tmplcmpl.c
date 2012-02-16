@@ -45,16 +45,12 @@ main (int argc, const char **argv) {
             if (depth++ == 0) {
                 END_HTML
                 c = fgetc(fin);
-                isexpr = false;
+                isexpr = true;
                 noescape = false;
-                if (c == '=') {
-                    isexpr = true;
-                    c = fgetc(fin);
-                    if (c == '!')
-                        noescape = true;
-                    else if (c != EOF)
-                        ungetc(c, fin);
-                }
+                if (c == '{')
+                    isexpr = false;
+                else if (c == '!')
+                    noescape = true;
                 else if (c != EOF)
                     ungetc(c, fin);
                 if (isexpr)
@@ -76,8 +72,14 @@ main (int argc, const char **argv) {
                     else
                         fputs("):html())\n", fout);
                 }
-                else
+                else {
+                    c = fgetc(fin);
+                    if (c != '}') {
+                        fprintf(stderr, "code chunk should end with '}}'\n");
+                        return 1;
+                    }
                     fputc('\n', fout);
+                }
             }
             else
                 fputc('}', fout);

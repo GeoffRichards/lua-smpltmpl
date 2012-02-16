@@ -1,16 +1,16 @@
-[{= hello }] [{=! hello }]
+[{ hello }] [{! hello }]
 
 Escaped: $$ ${ $} <x>&amp;</x>
 
-tostring: {= 23} {=! 42}
+tostring: { 23} {! 42}
 
-Nested braces: [{="x"} {= #{ {{ {}}} , {{}} } }{
+Nested braces: [{"x"} { #{ {{ {}}} , {{}} } }{{
     -- foo {} {{}}
     x = "bar \"\'' {} {{}} \\"
     x = 'bar \"\'" {} {{}} \\'
     x = "foo"
-} {=x}]
+}} {x}]
 
-[{ for _, item in ipairs(list) do }
-* {= item }.{
-   end }]
+[{{ for _, item in ipairs(list) do }}
+* { item }.{{
+   end }}]
