@@ -12,10 +12,7 @@ do
 end
 
 function M.compile (filename)
-    Priv.compile(filename, "tmp.lua")
-    local tmpfh = assert(io.open("tmp.lua", "rb"))
-    local code = assert(tmpfh:read("*a"))
-    tmpfh:close()
+    local code = Priv.compile(filename)
     local tmpl = assert(loadstring(code, "compiled template code"))()
     return tmpl, code
 end
