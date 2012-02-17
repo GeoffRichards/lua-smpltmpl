@@ -79,13 +79,15 @@ file_exists (lua_State *L) {
 }
 
 static int
-syntax_err (lua_State *L, QBuffer *buf, int line, int col, const char *err) {
+syntax_err (lua_State *L, QBuffer *buf, const char *filename,
+            int line, int col, const char *err)
+{
     qbuf_free(buf);
-    lua_pushfstring(L, "<TODO>:%d:%d: %s", line, col, err);
+    lua_pushfstring(L, "%s:%d:%d: %s", filename, line, col, err);
     return lua_error(L);
 }
 
-#define SYNTAX_ERR(err) syntax_err(L, buf, line, col, (err))
+#define SYNTAX_ERR(err) syntax_err(L, buf, filename, line, col, (err))
 
 #define QBUF_PUTS(buf, data) \
     qbuf_puts_len((buf), (data), strlen((data)))
@@ -108,12 +110,14 @@ compile_tmpl (lua_State *L) {
     int c;
     int depth = 0;
     int isexpr = 0, inhtml = 0, noescape = 0;   /* these are bools */
+    const char *filename;
     int line, col;
     QBuffer *buf;
 
-    if (lua_gettop(L) != 1)
+    if (lua_gettop(L) != 2)
         return luaL_error(L, "wrong number of args to qtemplate.compile()");
     data = luaL_checklstring(L, 1, &len);
+    filename = luaL_checkstring(L, 2);
     pos = 0;
     line = 1;
     col = 0;

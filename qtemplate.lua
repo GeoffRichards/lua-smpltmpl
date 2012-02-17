@@ -29,7 +29,7 @@ function ProcObj:compile_template (name)
         if Priv.file_exists(filename) then
             local fh = assert(io.open(filename, "rb"))
             local data = assert(fh:read("*a"))
-            local code = Priv.compile(data)
+            local code = Priv.compile(data, filename)
             local tmpl = assert(loadstring(code, "compiled template code"))()
             local obj = { mod = tmpl, engine = self }
             return setmetatable(obj, TmplObj), code

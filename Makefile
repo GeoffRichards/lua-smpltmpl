@@ -53,7 +53,7 @@ doc/$(PACKAGE).3: doc/$(PACKAGE).pod Changes
 	            --release="$(VERSION)" --date="$(RELEASEDATE)" >$@
 
 test: all
-	lua test/run.lua
+	$(VALGRIND) lua test/run.lua
 	diff -u test/out.expected test/out.got
 
 install: all
