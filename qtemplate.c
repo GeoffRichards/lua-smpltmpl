@@ -139,6 +139,39 @@ compile_tmpl (lua_State *L) {
             col = 1;
         }
 
+        if (depth != 0) {
+            int skipped = 0;        /* bool */
+            size_t start_pos = pos - 1;
+
+            if (c == '-' && data[pos] == '-') {     /* skip comments */
+                skipped = 1;
+                while (data[pos++] != '\n')
+                    ;
+                line++;
+            }
+            else if (c == '"' || c== '\'') {        /* skip string literals */
+                char quote = c;
+                skipped = 1;
+                do {
+                    c = data[pos++];
+                    col++;
+                    if (c == '\\') {
+                        if (data[pos++] == '\n') {
+                            line++;
+                            col = 1;
+                        }
+                        else
+                            col++;
+                    }
+                } while (c != quote);
+            }
+
+            if (skipped) {
+                qbuf_puts_len(buf, data + start_pos, pos - start_pos);
+                continue;
+            }
+        }
+
         if (c == '{') {
             if (depth++ == 0) {
                 END_HTML
