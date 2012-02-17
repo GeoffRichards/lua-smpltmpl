@@ -12,7 +12,7 @@ static void *
 malloc_chked (size_t size) {
     void *data = malloc(size);
     if (!data) {
-        fprintf(stderr, "qtemplate: error allocating memory\n");
+        fputs("qtemplate: error allocating memory\n", stderr);
         exit(1);
     }
     return data;
@@ -78,6 +78,15 @@ file_exists (lua_State *L) {
     return 1;
 }
 
+static int
+syntax_err (lua_State *L, QBuffer *buf, int line, int col, const char *err) {
+    qbuf_free(buf);
+    lua_pushfstring(L, "<TODO>:%d:%d: %s", line, col, err);
+    return lua_error(L);
+}
+
+#define SYNTAX_ERR(err) syntax_err(L, buf, line, col, (err))
+
 #define QBUF_PUTS(buf, data) \
     qbuf_puts_len((buf), (data), strlen((data)))
 
@@ -99,12 +108,15 @@ compile_tmpl (lua_State *L) {
     int c;
     int depth = 0;
     int isexpr = 0, inhtml = 0, noescape = 0;   /* these are bools */
+    int line, col;
     QBuffer *buf;
 
     if (lua_gettop(L) != 1)
         return luaL_error(L, "wrong number of args to qtemplate.compile()");
     data = luaL_checklstring(L, 1, &len);
     pos = 0;
+    line = 1;
+    col = 0;
 
     buf = qbuf_new();
     QBUF_PUTS(buf, "-- Template code compiled by Lua qtemplate module.\n"
@@ -117,6 +129,12 @@ compile_tmpl (lua_State *L) {
 
     while (pos < len) {
         c = data[pos++];
+        col++;
+        if (c == '\n') {
+            line++;
+            col = 1;
+        }
+
         if (c == '{') {
             if (depth++ == 0) {
                 END_HTML
@@ -124,12 +142,15 @@ compile_tmpl (lua_State *L) {
                 noescape = 0;
                 if (pos < len) {
                     c = data[pos++];
+                    col++;
                     if (c == '{')
                         isexpr = 0;
                     else if (c == '!')
                         noescape = 1;
-                    else
+                    else {
                         pos--;
+                        col--;
+                    }
                 }
                 if (isexpr)
                     QBUF_PUTS(buf, "    __out:write(tostring(");
@@ -138,10 +159,8 @@ compile_tmpl (lua_State *L) {
                 qbuf_putc(buf, '{');
         }
         else if (c == '}') {
-            if (depth == 0) {
-                fprintf(stderr, "unmatched '}'\n");
-                return 1;
-            }
+            if (depth == 0)
+                return SYNTAX_ERR("unmatched '}'");
             --depth;
             if (depth == 0) {
                 if (isexpr) {
@@ -151,10 +170,9 @@ compile_tmpl (lua_State *L) {
                         QBUF_PUTS(buf, "):html())\n");
                 }
                 else {
-                    if (pos >= len || data[pos++] != '}'){
-                        fprintf(stderr, "code chunk should end with '}}'\n");
-                        return 1;
-                    }
+                    if (pos >= len || data[pos++] != '}')
+                        return SYNTAX_ERR("code chunk should end with '}}'");
+                    col++;
                     qbuf_putc(buf, '\n');
                 }
             }
@@ -164,6 +182,9 @@ compile_tmpl (lua_State *L) {
         else if (c == '$') {
             if (pos < len) {
                 c = data[pos++];
+                if (c == '\n' || c == '\r')
+                    return SYNTAX_ERR("unexpected character after '$'");
+                col++;
                 START_HTML
                 qbuf_putc(buf, c);
             }
@@ -187,10 +208,8 @@ compile_tmpl (lua_State *L) {
     }
 
     END_HTML
-    if (depth != 0) {
-        fprintf(stderr, "unclosed '{' at end of file\n");
-        return 1;
-    }
+    if (depth != 0)
+        return SYNTAX_ERR("unclosed '{' at end of file");
 
     QBUF_PUTS(buf, "end\n\n"
               "setfenv(__M.generate, __env)\n\n"
