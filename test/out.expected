@@ -1,12 +1,12 @@
 [Hello &amp;&lt;world&gt;&quot;'] [Hello &<world>"']
 
-Escaped: $ { } <x>&amp;</x>
+Escaped: \ { } <x>&amp;</x> ' "
 
 tostring: 23 42
 
 Nested braces: [x 2 foo]
 
-[
-* foo.
+[* foo.
 * bar.
-* baz.]
+* baz.
+]

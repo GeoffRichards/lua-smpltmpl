@@ -216,17 +216,30 @@ compile_tmpl (lua_State *L) {
             else
                 qbuf_putc(buf, '}');
         }
-        else if (c == '$') {
-            if (pos < len) {
-                c = data[pos++];
-                if (c == '\n' || c == '\r')
-                    return SYNTAX_ERR("unexpected character after '$'");
+        else if (c == '\\') {
+            if (pos >= len)
+                return SYNTAX_ERR("can't have '\\' at end of file");
+            c = data[pos++];
+            col++;
+            if (c == '\\' || c == '{' || c == '}') {
                 col++;
                 START_HTML
                 qbuf_putc(buf, c);
+                if (c == '\\')
+                    qbuf_putc(buf, c);      /* escape in Lua source */
+            }
+            else if (c == '\n') {   /* skip LF */
+                line++;
+                col = 1;
+            }
+            else if (c == '\r') {   /* skip CR, and LF if there is one */
+                line++;
+                col = 1;
+                if (pos < len && data[pos] == '\n')
+                    pos++;
             }
             else
-                qbuf_putc(buf, '$');
+                return SYNTAX_ERR("unexpected character after '\\'");
         }
         else if (depth == 0) {
             START_HTML

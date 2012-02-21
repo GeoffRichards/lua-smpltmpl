@@ -1,6 +1,6 @@
 [{ hello }] [{! hello }]
 
-Escaped: $$ ${ $} <x>&amp;</x>
+Escaped: \\ \{ \} <x>&amp;</x> ' "
 
 tostring: { 23} {! 42}
 
@@ -13,6 +13,8 @@ Nested braces: [{"x"} { #{ {{ {}}} , {{}} } }{{
     x = "foo"
 }} {x}]
 
-[{{ for _, item in ipairs(list) do }}
-* { item }.{{
-   end }}]
+[\
+{{ for _, item in ipairs(list) do }}\
+* { item }.
+{{ end }}\
+]
