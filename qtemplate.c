@@ -128,8 +128,11 @@ compile_tmpl (lua_State *L) {
               "local __env, __envmeta = {}, {}\n"
               "for k, v in pairs(getfenv()) do __env[k] = v end\n"
               "setmetatable(__env, __envmeta)\n\n"
-              "function __M:generate (Tmpl, __out, __v)\n"
-              "    __envmeta.__index = __v\n");
+              "function __M:generate (__self, Tmpl, __out, __v)\n"
+              "    __envmeta.__index = __v\n"
+              "    local function include (name, vars)\n"
+              "        __self:_include(__out, name, (vars or __env))\n"
+              "    end\n");
 
     while (pos < len) {
         c = data[pos++];
@@ -290,7 +293,7 @@ luaopen_qtemplate_priv (lua_State *L) {
     lua_pushliteral(L, "compile");
     lua_pushcfunction(L, compile_tmpl);
     lua_rawset(L, -3);
-    lua_pushliteral(L, "file_exists");
+    lua_pushliteral(L, "_file_exists");
     lua_pushcfunction(L, file_exists);
     lua_rawset(L, -3);
 

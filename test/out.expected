@@ -10,3 +10,7 @@ Nested braces: [x 2 foo]
 * bar.
 * baz.
 ]
+
+include [first]
+include [second]
+

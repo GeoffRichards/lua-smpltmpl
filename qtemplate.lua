@@ -26,7 +26,7 @@ end
 function ProcObj:compile_template (name)
     for _, dir in ipairs(self.dirs) do
         local filename = dir .. "/" .. name .. ".qtmpl"
-        if Priv.file_exists(filename) then
+        if Priv._file_exists(filename) then
             local fh = assert(io.open(filename, "rb"))
             local data = assert(fh:read("*a"))
             local code = Priv.compile(data, filename)
@@ -39,7 +39,12 @@ function ProcObj:compile_template (name)
 end
 
 function TmplObj:generate (out, info)
-    self.mod:generate(M, out, info)
+    self.mod:generate(self, M, out, info)
+end
+
+function TmplObj:_include (out, name, info)
+    local tmpl = self.engine:compile_template(name)
+    tmpl:generate(out, info)
 end
 
 return M

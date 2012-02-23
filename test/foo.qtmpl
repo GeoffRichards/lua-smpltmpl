@@ -18,3 +18,9 @@ Nested braces: [{"x"} { #{ {{ {}}} , {{}} } }{{
 * { item }.
 {{ end }}\
 ]
+
+{{
+include("inc", { incvar = "first" })
+incvar = "second"
+include("inc")
+}}
