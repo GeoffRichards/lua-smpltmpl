@@ -1,4 +1,4 @@
-[Hello &amp;&lt;world&gt;&quot;'] [Hello &<world>"']
+[Hello &amp;&lt;world&gt;&quot;'] [Hello &amp;&lt;world&gt;&quot;'] [Hello &<world>"']
 
 Escaped: \ { } <x>&amp;</x> ' "
 

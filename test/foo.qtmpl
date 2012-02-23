@@ -1,4 +1,4 @@
-[{ hello }] [{! hello }]
+[{ hello }] [{!Tmpl.escape_html(hello)}] [{! hello }]
 
 Escaped: \\ \{ \} <x>&amp;</x> ' "
 

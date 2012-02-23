@@ -109,7 +109,7 @@ compile_tmpl (lua_State *L) {
     size_t len, pos;
     int c;
     int depth = 0;
-    int isexpr = 0, inhtml = 0, noescape = 0;   /* these are bools */
+    int isexpr = 0, inhtml = 0;     /* these are bools */
     const char *filename;
     int line, col;
     QBuffer *buf;
@@ -128,7 +128,7 @@ compile_tmpl (lua_State *L) {
               "local __env, __envmeta = {}, {}\n"
               "for k, v in pairs(getfenv()) do __env[k] = v end\n"
               "setmetatable(__env, __envmeta)\n\n"
-              "function __M:generate (__out, __v)\n"
+              "function __M:generate (Tmpl, __out, __v)\n"
               "    __envmeta.__index = __v\n");
 
     while (pos < len) {
@@ -174,9 +174,9 @@ compile_tmpl (lua_State *L) {
 
         if (c == '{') {
             if (depth++ == 0) {
+                int noescape = 0;   /* bool */
                 END_HTML
                 isexpr = 1;
-                noescape = 0;
                 if (pos < len) {
                     c = data[pos++];
                     col++;
@@ -189,8 +189,12 @@ compile_tmpl (lua_State *L) {
                         col--;
                     }
                 }
-                if (isexpr)
-                    QBUF_PUTS(buf, "    __out:write(tostring(");
+                if (isexpr) {
+                    if (noescape)
+                        QBUF_PUTS(buf, "    __out:write((tostring(");
+                    else
+                        QBUF_PUTS(buf, "    __out:write(Tmpl.escape_html(tostring(");
+                }
             }
             else
                 qbuf_putc(buf, '{');
@@ -200,12 +204,8 @@ compile_tmpl (lua_State *L) {
                 return SYNTAX_ERR("unmatched '}'");
             --depth;
             if (depth == 0) {
-                if (isexpr) {
-                    if (noescape)
-                        QBUF_PUTS(buf, "))\n");
-                    else
-                        QBUF_PUTS(buf, "):html())\n");
-                }
+                if (isexpr)
+                    QBUF_PUTS(buf, ")))\n");
                 else {
                     if (pos >= len || data[pos++] != '}')
                         return SYNTAX_ERR("code chunk should end with '}}'");

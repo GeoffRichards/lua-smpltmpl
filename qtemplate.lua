@@ -11,8 +11,8 @@ do
     local HTML_ESC = {
         ["<"] = '&lt;', [">"] = '&gt;', ["&"] = '&amp;', ["\""] = '&quot;',
     }
-    string.html = function (self)
-        return (gsub(self, '[<>&"]', function (c) return HTML_ESC[c] end))
+    function M.escape_html (s)
+        return (gsub(s, '[<>&"]', function (c) return HTML_ESC[c] end))
     end
 end
 
@@ -39,7 +39,7 @@ function ProcObj:compile_template (name)
 end
 
 function TmplObj:generate (out, info)
-    self.mod:generate(out, info)
+    self.mod:generate(M, out, info)
 end
 
 return M
