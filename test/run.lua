@@ -5,6 +5,9 @@ local QTmpl = require 'qtemplate'
 
 local TmplProc = QTmpl.new({ dirs = { 'test' } })
 local tmpl, code = TmplProc:compile_template('foo')
+local tmpl2, code2 = TmplProc:compile_template('foo')
+assert(tmpl2 == tmpl)
+assert(code2 == nil)
 
 -- Write out compiled template for debugging.
 do

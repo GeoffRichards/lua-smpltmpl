@@ -79,6 +79,17 @@ file_exists (lua_State *L) {
 }
 
 static int
+file_mtime (lua_State *L) {
+    const char *filename = luaL_checkstring(L, 1);
+    struct stat buf;
+    if (stat(filename, &buf))   /* error */
+        lua_pushnumber(L, (lua_Number) 0);
+    else
+        lua_pushnumber(L, (lua_Number) buf.st_mtime);
+    return 1;
+}
+
+static int
 syntax_err (lua_State *L, QBuffer *buf, const char *filename,
             int line, int col, const char *err)
 {
@@ -295,6 +306,9 @@ luaopen_qtemplate_priv (lua_State *L) {
     lua_rawset(L, -3);
     lua_pushliteral(L, "_file_exists");
     lua_pushcfunction(L, file_exists);
+    lua_rawset(L, -3);
+    lua_pushliteral(L, "_file_mtime");
+    lua_pushcfunction(L, file_mtime);
     lua_rawset(L, -3);
 
     return 1;

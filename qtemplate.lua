@@ -20,19 +20,26 @@ function M.new (opt)
     if type(opt) ~= 'table' or type(opt.dirs) ~= 'table' or #opt.dirs < 1 then
         error("'dirs' option is required, and it must be a table")
     end
-    return setmetatable({ dirs = opt.dirs }, ProcObj)
+    return setmetatable({ dirs = opt.dirs, cache = {} }, ProcObj)
 end
 
 function ProcObj:compile_template (name)
     for _, dir in ipairs(self.dirs) do
         local filename = dir .. "/" .. name .. ".qtmpl"
         if Priv._file_exists(filename) then
+            local mtime = Priv._file_mtime(filename)
+            local cached = self.cache[filename]
+            if cached and mtime == cached.mtime then
+                return cached.tmpl, nil
+            end
+
             local fh = assert(io.open(filename, "rb"))
             local data = assert(fh:read("*a"))
             local code = Priv.compile(data, filename)
             local tmpl = assert(loadstring(code, "compiled template code"))()
-            local obj = { mod = tmpl, engine = self }
-            return setmetatable(obj, TmplObj), code
+            local obj = setmetatable({ mod = tmpl, engine = self }, TmplObj)
+            self.cache[filename] = { tmpl = obj, mtime = mtime }
+            return obj, code
         end
     end
     error("template '" .. name .. "' not found in any include path")
