@@ -1,4 +1,4 @@
-PACKAGE=lua-qtemplate
+PACKAGE=lua-smpltmpl
 VERSION=$(shell head -1 Changes | sed 's/ .*//')
 RELEASEDATE=$(shell head -1 Changes | sed 's/.* //')
 PREFIX=/usr/local
@@ -13,7 +13,7 @@ LIBDIR = $(PREFIX)/lib
 # Uncomment this to run the regression tests with valgrind.
 #VALGRIND = valgrind -q --leak-check=yes --show-reachable=yes --num-callers=10
 
-OBJECTS = qtemplate.lo
+OBJECTS = smpltmpl.lo
 SOURCES := $(OBJECTS:.lo=.c)
 
 CC := gcc
@@ -58,7 +58,7 @@ test: all
 
 install: all
 	mkdir -p $(LUA_CPATH)
-	install --mode=644 .libs/lib$(PACKAGE)_priv.so.0.0.0 $(LUA_CPATH)/qtemplate_priv.so
+	install --mode=644 .libs/lib$(PACKAGE)_priv.so.0.0.0 $(LUA_CPATH)/smpltmpl_priv.so
 	mkdir -p $(PREFIX)/share/man/man3
 	gzip -c doc/$(PACKAGE).3 >$(PREFIX)/share/man/man3/$(PACKAGE).3.gz;
 
@@ -86,7 +86,7 @@ dist: all checktmp
 %.lo: %.c
 	@echo 'CC>' $@
 	@$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) $(DEBUG) -c -o $@ $<
-lib$(PACKAGE)_priv.la: qtemplate.lo
+lib$(PACKAGE)_priv.la: smpltmpl.lo
 	@echo 'LD>' $@
 	@$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) $(DEBUG) -o $@ $< -rpath $(LIBDIR)
 

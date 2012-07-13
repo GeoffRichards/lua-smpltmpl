@@ -1,10 +1,10 @@
-local M = { _NAME = 'qtemplate' }
-local ProcObj = { _NAME = 'qtemplate processor object' }
+local M = { _NAME = 'smpltmpl' }
+local ProcObj = { _NAME = 'smpltmpl processor object' }
 ProcObj.__index = ProcObj
-local TmplObj = { _NAME = 'qtemplate template object' }
+local TmplObj = { _NAME = 'smpltmpl template object' }
 TmplObj.__index = TmplObj
 
-local Priv = require 'qtemplate_priv'
+local Priv = require 'smpltmpl_priv'
 
 do
     local gsub = string.gsub
@@ -25,7 +25,7 @@ end
 
 function ProcObj:compile_template (name)
     for _, dir in ipairs(self.dirs) do
-        local filename = dir .. "/" .. name .. ".qtmpl"
+        local filename = dir .. "/" .. name .. ".tmpl"
         if Priv._file_exists(filename) then
             local mtime = Priv._file_mtime(filename)
             local cached = self.cache[filename]

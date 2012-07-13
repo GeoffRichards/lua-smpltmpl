@@ -1,4 +1,4 @@
-#include "qtemplate.h"
+#include "smpltmpl.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,21 +6,21 @@
 typedef struct {
     size_t size, alloc;
     char *data;
-} QBuffer;
+} SimpleBuffer;
 
 static void *
 malloc_chked (size_t size) {
     void *data = malloc(size);
     if (!data) {
-        fputs("qtemplate: error allocating memory\n", stderr);
+        fputs("smpltmpl: error allocating memory\n", stderr);
         exit(1);
     }
     return data;
 }
 
-static QBuffer *
-qbuf_new (void) {
-    QBuffer *buf = malloc_chked(sizeof(QBuffer));
+static SimpleBuffer *
+smplbuf_new (void) {
+    SimpleBuffer *buf = malloc_chked(sizeof(SimpleBuffer));
     buf->size = 0;
     buf->alloc = 8192;
     buf->data = malloc_chked(buf->alloc);
@@ -28,18 +28,18 @@ qbuf_new (void) {
 }
 
 static void
-qbuf_free (QBuffer *buf) {
+smplbuf_free (SimpleBuffer *buf) {
     free(buf->data);
     free(buf);
 }
 
 static void
-qbuf_pushlua (QBuffer *buf, lua_State *L) {
+smplbuf_pushlua (SimpleBuffer *buf, lua_State *L) {
     lua_pushlstring(L, buf->data, buf->size);
 }
 
 static void
-qbuf_ensure_available (QBuffer *buf, size_t needed) {
+smplbuf_ensure_available (SimpleBuffer *buf, size_t needed) {
     size_t total_needed = buf->size + needed;
     if (total_needed > buf->alloc) {
         size_t newsize = buf->alloc;
@@ -55,15 +55,15 @@ qbuf_ensure_available (QBuffer *buf, size_t needed) {
 }
 
 static void
-qbuf_puts_len (QBuffer *buf, const char *data, size_t size) {
-    qbuf_ensure_available(buf, size);
+smplbuf_puts_len (SimpleBuffer *buf, const char *data, size_t size) {
+    smplbuf_ensure_available(buf, size);
     memcpy(buf->data + buf->size, data, size);
     buf->size += size;
 }
 
 static void
-qbuf_putc (QBuffer *buf, char c) {
-    qbuf_ensure_available(buf, 1);
+smplbuf_putc (SimpleBuffer *buf, char c) {
+    smplbuf_ensure_available(buf, 1);
     buf->data[buf->size++] = c;
 }
 
@@ -90,27 +90,27 @@ file_mtime (lua_State *L) {
 }
 
 static int
-syntax_err (lua_State *L, QBuffer *buf, const char *filename,
+syntax_err (lua_State *L, SimpleBuffer *buf, const char *filename,
             int line, int col, const char *err)
 {
-    qbuf_free(buf);
+    smplbuf_free(buf);
     lua_pushfstring(L, "%s:%d:%d: %s", filename, line, col, err);
     return lua_error(L);
 }
 
 #define SYNTAX_ERR(err) syntax_err(L, buf, filename, line, col, (err))
 
-#define QBUF_PUTS(buf, data) \
-    qbuf_puts_len((buf), (data), strlen((data)))
+#define SMPLBUF_PUTS(buf, data) \
+    smplbuf_puts_len((buf), (data), strlen((data)))
 
 #define START_HTML \
     if (!inhtml) { \
-        QBUF_PUTS(buf, "    __out:write(\""); \
+        SMPLBUF_PUTS(buf, "    __out:write(\""); \
         inhtml = 1; \
     }
 #define END_HTML \
     if (inhtml) { \
-        QBUF_PUTS(buf, "\")\n"); \
+        SMPLBUF_PUTS(buf, "\")\n"); \
         inhtml = 0; \
     }
 
@@ -123,27 +123,27 @@ compile_tmpl (lua_State *L) {
     int isexpr = 0, inhtml = 0;     /* these are bools */
     const char *filename;
     int line, col;
-    QBuffer *buf;
+    SimpleBuffer *buf;
 
     if (lua_gettop(L) != 2)
-        return luaL_error(L, "wrong number of args to qtemplate.compile()");
+        return luaL_error(L, "wrong number of args to smpltmpl.compile()");
     data = luaL_checklstring(L, 1, &len);
     filename = luaL_checkstring(L, 2);
     pos = 0;
     line = 1;
     col = 0;
 
-    buf = qbuf_new();
-    QBUF_PUTS(buf, "-- Template code compiled by Lua qtemplate module.\n"
-              "local __M = {}\n\n"
-              "local __env, __envmeta = {}, {}\n"
-              "for k, v in pairs(getfenv()) do __env[k] = v end\n"
-              "setmetatable(__env, __envmeta)\n\n"
-              "function __M:generate (__self, Tmpl, __out, __v)\n"
-              "    __envmeta.__index = __v\n"
-              "    local function include (name, vars)\n"
-              "        __self:_include(__out, name, (vars or __env))\n"
-              "    end\n");
+    buf = smplbuf_new();
+    SMPLBUF_PUTS(buf, "-- Template code compiled by Lua smpltmpl module.\n"
+                 "local __M = {}\n\n"
+                 "local __env, __envmeta = {}, {}\n"
+                 "for k, v in pairs(getfenv()) do __env[k] = v end\n"
+                 "setmetatable(__env, __envmeta)\n\n"
+                 "function __M:generate (__self, Tmpl, __out, __v)\n"
+                 "    __envmeta.__index = __v\n"
+                 "    local function include (name, vars)\n"
+                 "        __self:_include(__out, name, (vars or __env))\n"
+                 "    end\n");
 
     while (pos < len) {
         c = data[pos++];
@@ -181,7 +181,7 @@ compile_tmpl (lua_State *L) {
             }
 
             if (skipped) {
-                qbuf_puts_len(buf, data + start_pos, pos - start_pos);
+                smplbuf_puts_len(buf, data + start_pos, pos - start_pos);
                 continue;
             }
         }
@@ -205,13 +205,13 @@ compile_tmpl (lua_State *L) {
                 }
                 if (isexpr) {
                     if (noescape)
-                        QBUF_PUTS(buf, "    __out:write((tostring(");
+                        SMPLBUF_PUTS(buf, "    __out:write((tostring(");
                     else
-                        QBUF_PUTS(buf, "    __out:write(Tmpl.escape_html(tostring(");
+                        SMPLBUF_PUTS(buf, "    __out:write(Tmpl.escape_html(tostring(");
                 }
             }
             else
-                qbuf_putc(buf, '{');
+                smplbuf_putc(buf, '{');
         }
         else if (c == '}') {
             if (depth == 0)
@@ -219,16 +219,16 @@ compile_tmpl (lua_State *L) {
             --depth;
             if (depth == 0) {
                 if (isexpr)
-                    QBUF_PUTS(buf, ")))\n");
+                    SMPLBUF_PUTS(buf, ")))\n");
                 else {
                     if (pos >= len || data[pos++] != '}')
                         return SYNTAX_ERR("code chunk should end with '}}'");
                     col++;
-                    qbuf_putc(buf, '\n');
+                    smplbuf_putc(buf, '\n');
                 }
             }
             else
-                qbuf_putc(buf, '}');
+                smplbuf_putc(buf, '}');
         }
         else if (c == '\\') {
             if (pos >= len)
@@ -238,9 +238,9 @@ compile_tmpl (lua_State *L) {
             if (c == '\\' || c == '{' || c == '}') {
                 col++;
                 START_HTML
-                qbuf_putc(buf, c);
+                smplbuf_putc(buf, c);
                 if (c == '\\')
-                    qbuf_putc(buf, c);      /* escape in Lua source */
+                    smplbuf_putc(buf, c);       /* escape in Lua source */
             }
             else if (c == '\n') {   /* skip LF */
                 line++;
@@ -258,16 +258,16 @@ compile_tmpl (lua_State *L) {
         else if (depth == 0) {
             START_HTML
             if (c == '\n')
-                QBUF_PUTS(buf, "\\n");
+                SMPLBUF_PUTS(buf, "\\n");
             else if (c == '\r')
-                QBUF_PUTS(buf, "\\r");
+                SMPLBUF_PUTS(buf, "\\r");
             else if (c == '\"')
-                QBUF_PUTS(buf, "\\\"");
+                SMPLBUF_PUTS(buf, "\\\"");
             else
-                qbuf_putc(buf, c);
+                smplbuf_putc(buf, c);
         }
         else {
-            qbuf_putc(buf, c);
+            smplbuf_putc(buf, c);
         }
     }
 
@@ -275,16 +275,16 @@ compile_tmpl (lua_State *L) {
     if (depth != 0)
         return SYNTAX_ERR("unclosed '{' at end of file");
 
-    QBUF_PUTS(buf, "end\n\n"
-              "setfenv(__M.generate, __env)\n\n"
-              "return __M\n");
-    qbuf_pushlua(buf, L);
-    qbuf_free(buf);
+    SMPLBUF_PUTS(buf, "end\n\n"
+                 "setfenv(__M.generate, __env)\n\n"
+                 "return __M\n");
+    smplbuf_pushlua(buf, L);
+    smplbuf_free(buf);
     return 1;
 }
 
 int
-luaopen_qtemplate_priv (lua_State *L) {
+luaopen_smpltmpl_priv (lua_State *L) {
 #ifdef VALGRIND_LUA_MODULE_HACK
     /* Hack to allow Valgrind to access debugging info for the module. */
     luaL_getmetatable(L, "_LOADLIB");
@@ -294,9 +294,9 @@ luaopen_qtemplate_priv (lua_State *L) {
 #endif
 
     /* Create the table to return from 'require' */
-    lua_createtable(L, 0, 3);
+    lua_createtable(L, 0, 5);
     lua_pushliteral(L, "_NAME");
-    lua_pushliteral(L, "qtemplate_priv");
+    lua_pushliteral(L, "smpltmpl_priv");
     lua_rawset(L, -3);
     lua_pushliteral(L, "_VERSION");
     lua_pushliteral(L, VERSION);

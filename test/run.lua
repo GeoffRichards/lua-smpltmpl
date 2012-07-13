@@ -1,17 +1,17 @@
 -- This will load the new copy of the library on Unix systems where it's built
 -- with libtool.
 package.cpath = ".libs/liblua-?.so;" .. package.cpath
-local QTmpl = require 'qtemplate'
+local Tmpl = require 'smpltmpl'
 
-local TmplProc = QTmpl.new({ dirs = { 'test' } })
-local tmpl, code = TmplProc:compile_template('foo')
-local tmpl2, code2 = TmplProc:compile_template('foo')
+local proc = Tmpl.new({ dirs = { 'test' } })
+local tmpl, code = proc:compile_template('foo')
+local tmpl2, code2 = proc:compile_template('foo')
 assert(tmpl2 == tmpl)
 assert(code2 == nil)
 
 -- Write out compiled template for debugging.
 do
-    local fh = assert(io.open("test/foo.qtmpl.lua", "wb"))
+    local fh = assert(io.open("test/foo.tmpl.lua", "wb"))
     fh:write(code)
     fh:close()
 end

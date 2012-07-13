@@ -2,4 +2,4 @@
 *.lo
 *.o
 .libs
-liblua-qtemplate_priv.la
+liblua-smpltmpl_priv.la
