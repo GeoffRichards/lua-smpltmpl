@@ -76,24 +76,19 @@ dist: all checktmp
 	rm -rf tmp
 
 
-# Dependencies.
-%.d: %.c
-	@echo 'DEP>' $@
-	@$(CC) -M $(CFLAGS) $< | \
-	   sed -e 's,\($*\)\.o[ :]*,\1.lo $@ : ,g' > $@
--include $(SOURCES:.c=.d)
-
 %.lo: %.c
 	@echo 'CC>' $@
 	@$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) $(DEBUG) -c -o $@ $<
+smpltmpl.lo: smpltmpl.c smpltmpl.h
 lib$(PACKAGE)_priv.la: smpltmpl.lo
 	@echo 'LD>' $@
 	@$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) $(DEBUG) -o $@ $< -rpath $(LIBDIR)
 
 clean:
-	rm -f *.o *.lo *.d core
+	rm -f *.o *.lo
 	rm -rf lib$(PACKAGE)_priv.la .libs
 	rm -f gmon.out *.bb *.bbg *.da *.gcov
+	rm -f test/foo.tmpl.lua test/out.got
 realclean: clean
 	rm -f doc/$(PACKAGE).3
 
