@@ -17,8 +17,8 @@ do
 end
 
 local info = {
-        hello = "Hello &<world>\"'",
-        list = { "foo", "bar", "baz" },
+    hello = "Hello &<world>\"'",
+    list = { "foo", "bar", "baz" },
 }
 
 local out = assert(io.open("test/out.got", "wb"))

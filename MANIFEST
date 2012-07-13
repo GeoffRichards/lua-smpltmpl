@@ -1,0 +1,15 @@
+COPYRIGHT
+Changes
+MANIFEST
+Makefile
+README
+doc/lua-smpltmpl.3
+doc/lua-smpltmpl.pod
+smpltmpl.c
+smpltmpl.h
+smpltmpl.lua
+smpltmpl.vim
+test/foo.st
+test/inc.st
+test/out.expected
+test/run.lua

@@ -4,7 +4,9 @@ RELEASEDATE=$(shell head -1 Changes | sed 's/.* //')
 PREFIX=/usr/local
 DISTNAME=$(PACKAGE)-$(VERSION)
 
-# The path to where the module's source files should be installed.
+# The paths to where the module's files should be installed.
+LUA_SPATH:=$(shell pkg-config lua5.1 --define-variable=prefix=$(PREFIX) \
+                              --variable=INSTALL_LMOD)
 LUA_CPATH:=$(shell pkg-config lua5.1 --define-variable=prefix=$(PREFIX) \
                               --variable=INSTALL_CMOD)
 
@@ -56,10 +58,12 @@ test: all
 	diff -u test/out.expected test/out.got
 
 install: all
+	mkdir -p $(LUA_SPATH)
+	install --mode=644 smpltmpl.lua $(LUA_SPATH)/
 	mkdir -p $(LUA_CPATH)
 	install --mode=644 .libs/lib$(PACKAGE)_priv.so.0.0.0 $(LUA_CPATH)/smpltmpl_priv.so
 	mkdir -p $(PREFIX)/share/man/man3
-	gzip -c doc/$(PACKAGE).3 >$(PREFIX)/share/man/man3/$(PACKAGE).3.gz;
+	gzip -c doc/$(PACKAGE).3 >$(PREFIX)/share/man/man3/$(PACKAGE).3.gz
 
 
 checktmp:
