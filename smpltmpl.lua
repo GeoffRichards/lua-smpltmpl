@@ -25,7 +25,7 @@ end
 
 function ProcObj:compile_template (name)
     for _, dir in ipairs(self.dirs) do
-        local filename = dir .. "/" .. name .. ".tmpl"
+        local filename = dir .. "/" .. name .. ".st"
         if Priv._file_exists(filename) then
             local mtime = Priv._file_mtime(filename)
             local cached = self.cache[filename]

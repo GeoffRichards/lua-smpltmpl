@@ -88,7 +88,7 @@ clean:
 	rm -f *.o *.lo
 	rm -rf lib$(PACKAGE)_priv.la .libs
 	rm -f gmon.out *.bb *.bbg *.da *.gcov
-	rm -f test/foo.tmpl.lua test/out.got
+	rm -f test/foo.st.lua test/out.got
 realclean: clean
 	rm -f doc/$(PACKAGE).3
 

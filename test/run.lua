@@ -11,7 +11,7 @@ assert(code2 == nil)
 
 -- Write out compiled template for debugging.
 do
-    local fh = assert(io.open("test/foo.tmpl.lua", "wb"))
+    local fh = assert(io.open("test/foo.st.lua", "wb"))
     fh:write(code)
     fh:close()
 end
