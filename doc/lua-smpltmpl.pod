@@ -1,0 +1,174 @@
+=head1 Name
+
+Lua-SmplTmpl - Very simple Lua 5.1 templating module
+
+
+=head1 Description
+
+This module can be used for generating HTML, or any textual output, in a convenient way.
+It was designed to be as simple as possible while still having all the features it needs to be suitable for generating real web pages.
+
+The template files used by this module should have the file extension I<.st>.
+Everything in the template is treated as plain text, and sent straight to the output when the template is used, except the following special syntax:
+
+=over
+
+=item *
+
+Single braces:
+
+=for syntax-highlight smpltmpl
+
+    {x + y}
+
+The stuff inside the braces should be a Lua expression, which will be evaluated when the template processing reaches this point.
+The first value returned from the expression will be turned into a string by calling C<tostring()> on it, and then that string will be escaped to make it HTML-safe, and inserted into the output.
+The escaping will deal with C<< < >>, C<< > >>, C<&>, and C<"> characters, but single quotes/apostrophes (C<'>) will not be escaped.
+
+=item *
+
+Single braces with bang:
+
+=for syntax-highlight smpltmpl
+
+    {!foo}
+
+This is handled in the same way as plain braces, except that the result of the expression will not be escaped.
+Whatever sequence of bytes ends up in the string will be inserted into the output as-is.
+
+=item *
+
+Double braces:
+
+=for syntax-highlight smpltmpl
+
+    {{
+       items = { "foo", "bar", "baz" }
+       for i, name in ipairs(items) do
+    }}
+    <option value={i}>{name}</option>
+    {{ end }}
+
+These can contain arbitrary Lua statements.
+The statements will be executed when the template processing reaches them.
+The double braces don't produce any output themselves, but as shown above they can be used for loops, as well as for conditional sections:
+
+=for syntax-highlight smpltmpl
+
+    {{ if user.logged_in then }}
+    <a href="...">Log out</a>
+    {{ end }}
+
+Notice in the loop example above that nested braces in the Lua code are correctly skipped over by the template parser, so they don't need to be specially escaped.
+The parser will also skip over braces in Lua's C<""> or C<''> string literals and single-line comments, but currently it doesn't know how to deal with multi-line comments or multi-line string literals.
+
+The code in double braces can also be used to run other template files, using the specially defined C<include()> function:
+
+    include("tmplname", { foo = "blah", bar = 23 })
+    include("blurb")
+
+When C<include> is called, the template processor will compile the template whose name is given in the first argument, in the same way as the C<compile_template> method described below.
+Templates are cached, so it's efficient to include the same template repeatedly.
+If the second argument is given, then it should be a table of variables which will be available to the included template.
+If it's not included, then the variables passed to the current template are passed on to the included one instead.
+
+=item *
+
+Escaping with backslashes:
+
+=for syntax-highlight smpltmpl
+
+    \\ \{ \}
+
+Backslashes can be used to escape characters that would normally be interpreted specially by the template parser.
+That means that any backslashes to be included in the output have to be escaped in this way.
+
+If a backslash is put on the end of a line (with nothing, not even spaces, between it and the newline or carriage-return character), then the line break will not be included in the output.
+This can be used to lay out the text of the template file in a more readable way without unwanted newlines getting in to the output.
+
+=back
+
+
+=head1 Loading the module
+
+The SmplTmpl module doesn't install itself into any global tables, so you can
+decide what name you want to use to access it.  You will probably want to
+load it like this:
+
+=for syntax-highlight lua
+
+    local Tmpl = require "smpltmpl"
+
+You can use a variable called something other than C<Tmpl> if you'd like,
+or you could assign the table returned by C<require> to a global variable.
+In this documentation we'll assume you're using a variable called C<Tmpl>.
+
+
+=head1 Compiling and running templates
+
+First create a template processor object:
+
+=for syntax-highlight lua
+
+    local tmplproc = Tmpl.new({ dirs = { 'templates' } })
+
+The argument provided must be a table, and must include the C<dirs> table.
+That option should be an array of at least one path in which the processor will search for templates.
+
+Each template processor object is separate from any others.
+They each have their own C<dirs> setting, and their own in-memory cache of compiled templates.
+
+The C<Tmpl> processor object has another function called C<escape_html>, which is used by the compiled template code to do HTML escaping.
+It can be called directly as well by any Lua code.
+The template processor object is made available in the template's environment as well, so it can be called inside a template explicitly.
+For example, these two lines of template code will generate the same output:
+
+=for syntax-highlight smpltmpl
+
+    {textvar}
+    {!Tmpl.escape_html(textvar)}
+
+Templates can be compiled as follows:
+
+=for syntax-highlight lua
+
+    local tmpl = tmplproc:compile_template('foo')
+
+This will search for a file called I<foo.st> in each directory in the C<dirs> option, using the first one it finds.
+The value returned is an object which can be used to produce the templates output.
+
+The C<compile_template> method actually returns two values, but the second one can usually be ignored.
+The second value is a string containing the Lua code which the template was compiled into.
+It might sometimes be helpful to write this code into a file to debug it.
+The template object itself only contains the compiled Lua bytecode which will be run when the template is used.
+
+To generate output from a template object, call it's C<generate> method:
+
+=for syntax-highlight lua
+
+    tmpl:generate(out, vars)
+
+The C<vars> argument should be a table of values that will be accessible in the template code's environment.
+You can access these like normal global variables in any Lua code in the template.
+
+The first argument can be any object representing some kind of output stream.
+It must possible to call a method called C<write> on the output object.
+The C<write> function will always be passed the output object and a single string as its arguments.
+Any results returned from the C<write> function will be ignored.
+
+Ordinary Lua file handles fulfil the requirements of the output stream objects the templates need, so you can easily write template output to a file.
+For example, this will write to the standard output:
+
+=for syntax-highlight lua
+
+    tmpl:generate(io.output(), { var1 = "hello" })
+
+
+=head1 Copyright
+
+This software and documentation is Copyright E<copy> 2012 Geoff Richards E<lt>geoff@geoffrichards.co.ukE<gt>.
+It is free software; you can redistribute it and/or modify it under the terms of the S<Lua 5.0> license.
+The full terms are given in the file F<COPYRIGHT> supplied with the source code package, and are also available here:
+L<http://www.lua.org/license.html>
+
+=for comment

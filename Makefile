@@ -42,8 +42,7 @@ DEBUG := -g
 #DEBUG := $(DEBUG) -pg
 #DEBUG := $(DEBUG) -fprofile-arcs -ftest-coverage
 
-all: lib$(PACKAGE)_priv.la
-#TODO: manpages
+all: lib$(PACKAGE)_priv.la manpages
 
 manpages: doc/$(PACKAGE).3
 doc/$(PACKAGE).3: doc/$(PACKAGE).pod Changes

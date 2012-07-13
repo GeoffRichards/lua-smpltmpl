@@ -1,0 +1,10 @@
+This Lua library provides a simple text/HTML templating system.
+
+See the documentation in the 'doc' directory (in POD and man(1)
+format) for details.  The documentation is also available online
+at the module's website:
+
+    http://www.geoffrichards.co.uk/lua/smpltmpl/
+
+This module includes C code that needs to be compiled.  For Linux
+systems the Makefile provided should do the trick.
