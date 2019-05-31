@@ -74,7 +74,7 @@ static int
 file_exists (lua_State *L) {
     const char *filename = luaL_checkstring(L, 1);
     struct stat buf;
-    lua_pushboolean(L, !stat(filename, &buf) || errno == ENOENT);
+    lua_pushboolean(L, !stat(filename, &buf) || errno != ENOENT);
     return 1;
 }
 
