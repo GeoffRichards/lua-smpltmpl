@@ -1,5 +1,6 @@
 2.0     2019-05-31
 
+ * Switched to supporting Lua 5.3 instead of 5.1.
  * Fixed bug in checking whether included files actually exist.
 
 1.0     2012-07-13

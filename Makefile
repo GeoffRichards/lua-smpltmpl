@@ -5,9 +5,9 @@ PREFIX=/usr/local
 DISTNAME=$(PACKAGE)-$(VERSION)
 
 # The paths to where the module's files should be installed.
-LUA_SPATH:=$(shell pkg-config lua5.1 --define-variable=prefix=$(PREFIX) \
+LUA_SPATH:=$(shell pkg-config lua5.3 --define-variable=prefix=$(PREFIX) \
                               --variable=INSTALL_LMOD)
-LUA_CPATH:=$(shell pkg-config lua5.1 --define-variable=prefix=$(PREFIX) \
+LUA_CPATH:=$(shell pkg-config lua5.3 --define-variable=prefix=$(PREFIX) \
                               --variable=INSTALL_CMOD)
 
 LIBDIR = $(PREFIX)/lib
@@ -21,12 +21,12 @@ SOURCES := $(OBJECTS:.lo=.c)
 CC := gcc
 LIBTOOL := libtool --quiet
 
-CFLAGS := -ansi -pedantic -Wall -W -Wshadow -Wpointer-arith \
+CFLAGS := -std=c99 -pedantic -Wall -W -Wshadow -Wpointer-arith \
           -Wcast-align -Wwrite-strings -Wstrict-prototypes \
           -Wmissing-prototypes -Wnested-externs -Wno-long-long \
-          $(shell pkg-config --cflags lua5.1) \
+          $(shell pkg-config --cflags lua5.3) \
           -DVERSION=\"$(VERSION)\"
-LDFLAGS := $(shell pkg-config --libs lua5.1)
+LDFLAGS := $(shell pkg-config --libs lua5.3)
 
 # Uncomment this line to enable optimization.  Comment it out when running
 # the test suite because it makes the assert() errors clearer and avoids

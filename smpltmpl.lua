@@ -34,9 +34,9 @@ function ProcObj:compile_template (name)
             end
 
             local fh = assert(io.open(filename, "rb"))
-            local data = assert(fh:read("*a"))
+            local data = assert(fh:read("a"))
             local code = Priv.compile(data, filename)
-            local tmpl = assert(loadstring(code, "compiled template code"))()
+            local tmpl = assert(load(code, "compiled template code"))()
             local obj = setmetatable({ mod = tmpl, engine = self }, TmplObj)
             self.cache[filename] = { tmpl = obj, mtime = mtime }
             return obj, code

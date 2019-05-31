@@ -1,6 +1,6 @@
 =head1 Name
 
-Lua-SmplTmpl - Very simple Lua 5.1 templating module
+Lua-SmplTmpl - Very simple Lua 5.3 templating module
 
 
 =head1 Description

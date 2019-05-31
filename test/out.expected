@@ -3,6 +3,7 @@
 Escaped: \ { } <x>&amp;</x> ' "
 
 tostring: 23 42
+floats: 23.0 42.0
 
 Nested braces: [x 2 foo]
 

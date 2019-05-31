@@ -3,6 +3,7 @@
 Escaped: \\ \{ \} <x>&amp;</x> ' "
 
 tostring: { 23} {! 42}
+floats: { 23.0000} {! 42.0000}
 
 Nested braces: [{"x"} { #{ {{ {}}} , {{}} } }{{
     -- foo {} {{}} }}}}

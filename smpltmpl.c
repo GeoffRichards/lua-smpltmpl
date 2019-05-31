@@ -137,10 +137,11 @@ compile_tmpl (lua_State *L) {
     SMPLBUF_PUTS(buf, "-- Template code compiled by Lua smpltmpl module.\n"
                  "local __M = {}\n\n"
                  "local __env, __envmeta = {}, {}\n"
-                 "for k, v in pairs(getfenv()) do __env[k] = v end\n"
+                 "for k, v in pairs(_ENV) do __env[k] = v end\n"
                  "setmetatable(__env, __envmeta)\n\n"
                  "function __M:generate (__self, Tmpl, __out, __v)\n"
                  "    __envmeta.__index = __v\n"
+                 "    local _ENV = __env\n"
                  "    local function include (name, vars)\n"
                  "        __self:_include(__out, name, (vars or __env))\n"
                  "    end\n");
@@ -276,7 +277,6 @@ compile_tmpl (lua_State *L) {
         return SYNTAX_ERR("unclosed '{' at end of file");
 
     SMPLBUF_PUTS(buf, "end\n\n"
-                 "setfenv(__M.generate, __env)\n\n"
                  "return __M\n");
     smplbuf_pushlua(buf, L);
     smplbuf_free(buf);
