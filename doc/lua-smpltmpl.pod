@@ -135,7 +135,7 @@ Templates can be compiled as follows:
     local tmpl = tmplproc:compile_template('foo')
 
 This will search for a file called I<foo.st> in each directory in the C<dirs> option, using the first one it finds.
-The value returned is an object which can be used to produce the templates output.
+The value returned is an object which can be used to produce the template's output.
 
 The C<compile_template> method actually returns two values, but the second one can usually be ignored.
 The second value is a string containing the Lua code which the template was compiled into.
@@ -166,7 +166,7 @@ For example, this will write to the standard output:
 
 =head1 Copyright
 
-This software and documentation is Copyright E<copy> 2012 Geoff Richards E<lt>geoff@geoffrichards.co.ukE<gt>.
+This software and documentation is Copyright E<copy> 2012-2019 Geoff Richards E<lt>geoff@geoffrichards.co.ukE<gt>.
 It is free software; you can redistribute it and/or modify it under the terms of the S<Lua 5.0> license.
 The full terms are given in the file F<COPYRIGHT> supplied with the source code package, and are also available here:
 L<http://www.lua.org/license.html>

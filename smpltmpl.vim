@@ -1,3 +1,5 @@
+" TODO: redefine luaError to link to Statement instead of Error, attempts so far have failed.
+
 if exists("b:current_syntax")
     finish
 endif

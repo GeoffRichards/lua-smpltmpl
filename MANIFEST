@@ -2,7 +2,7 @@ COPYRIGHT
 Changes
 MANIFEST
 Makefile
-README
+README.md
 doc/lua-smpltmpl.3
 doc/lua-smpltmpl.pod
 smpltmpl.c
