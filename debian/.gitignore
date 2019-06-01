@@ -1,0 +1,5 @@
+.debhelper
+lua-smpltmpl-dev.install
+lua-smpltmpl.install
+lua_versions
+tests
